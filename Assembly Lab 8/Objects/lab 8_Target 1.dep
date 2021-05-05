@@ -1,0 +1,8 @@
+Dependencies for Project 'lab 8', Target 'Target 1': (DO NOT MODIFY !)
+CompilerVersion: 5060960::V5.06 update 7 (build 960)::.\ARMCC
+F (.\lab 8.s)(0x60621B69)(--cpu Cortex-M0+ --pd "__EVAL SETA 1" -g --apcs=interwork -IC:\Users\shubh\AppData\Local\Arm\Packs\Keil\Kinetis_KLxx_DFP\1.14.0\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include--pd "__UVISION_VERSION SETA 533" --pd "MKL05Z32xxx4 SETA 1"--list ".\listings\lab 8.lst" --xref --length 49 --width 120 -o ".\objects\lab 8.o" --depend ".\objects\lab 8.d")
+I (MKL05Z4.s)(0x6037CE8B)
+F (.\MKL05Z4.s)(0x6037CE8B)(--cpu Cortex-M0+ --pd "__EVAL SETA 1" -g --apcs=interwork -IC:\Users\shubh\AppData\Local\Arm\Packs\Keil\Kinetis_KLxx_DFP\1.14.0\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include--pd "__UVISION_VERSION SETA 533" --pd "MKL05Z32xxx4 SETA 1"--list .\listings\mkl05z4.lst --xref --length 49 --width 120 -o .\objects\mkl05z4.o --depend .\objects\mkl05z4.d)
+F (.\Start.s)(0x6037CE89)(--cpu Cortex-M0+ --pd "__EVAL SETA 1" -g --apcs=interwork -IC:\Users\shubh\AppData\Local\Arm\Packs\Keil\Kinetis_KLxx_DFP\1.14.0\Device\Include-IC:\Keil_v5\ARM\CMSIS\Include--pd "__UVISION_VERSION SETA 533" --pd "MKL05Z32xxx4 SETA 1"--list .\listings\start.lst --xref --length 49 --width 120 -o .\objects\start.o --depend .\objects\start.d)
+I (MKL05Z4.s)(0x6037CE8B)
+F (.\Exercise08_Lib.lib)(0x60558377)()
