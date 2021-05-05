@@ -1,0 +1,53 @@
+;/* Global variables */
+;	word MemoryWord,
+;	Result;
+;/* Function */
+;	word DecMemWord (word *Pointer) {
+;		word MemWord;
+;		MemWord = *Pointer;
+;		MemWord = MemWord - 1;
+;		*Pointer = MemWord;
+;		return MemWord;
+;	}
+;/* Call */
+;Result = DecMemWord (&MemoryWord);
+
+		;initialize and call function
+main	PROC	{}
+		LDR		R0, =MemoryWord		;&MemoryWord
+		PUSH	{R0}				;input variable passed through stack
+		SUB		SP, SP, #4			;Allocate return
+		
+		BL		DecMemWord			;function call
+		
+		POP		{R0}				;return
+		LDR 	R1, =Result			;&Result
+		STR		R0, {R1, #0}		;save result to memory
+		ADD		SP, SP, #4			;Reset stack
+end		
+		BL		.
+		ENDP
+		
+DecMemWord	PROC	{R0-R13}
+; input
+;	MemoryWord : Pointer
+; Output
+;	MemWord : Value
+			PUSH	{R7, LR}	;Return address and Frame Pointer retention 
+			
+			MOV		R7, SP		;establish new Frame Pointer
+			
+			PUSH 	{R0}			;variable registers
+			SUB 	SP, SP, #4		;allocate local variables
+			LDR 	R0,[R7, #8]		;*MemoryWord input from stack
+			LDR		R0,[R0, #0] 	;MemoryWord
+			
+			SUBS	R0, R0, #1		;MemoryWord-1
+			STR		R0,[SP, #0]		;MemoryWord <- MemoryWord-1
+			
+			ADD		SP, SP, #4		;Deallocate variables
+			POP		{R0}			;end variable
+			POP		{R7, PC}		
+			
+			ENDP
+

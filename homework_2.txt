@@ -1,0 +1,79 @@
+;****** ASSIGNMENT 2 ************
+;Author: Shubhang Mehrotra
+;Date: 19 February 2021
+
+;_Question 1:______
+;
+;     Psuedo Code: 
+;      if(R1 > 0)
+;         R0 = R0 + R1
+;      else
+;         R0 = R0 - R1
+
+if	    CMP		R1,#0       ; compare the value in Register R1 with 0
+							; signed comparision
+	    BLE     else        ; if the value is less than or equal to 0, branch to else
+		ADDS    R0,R0,R1    ; if value is more than 0, Add value of R1 to value of R0
+
+else    SUBS    R0,R0,R1    ; Else, subtract the value of R1 from R0 
+
+
+;_Question 2:______
+;
+;     Psuedo Code: 
+;       while (R0 < MaxCount){
+;         R0 = R0 + 1
+;       }
+
+        LDR   R5,=MaxCount  ;Load address of MaxCount
+        LDR   R6,[R5,#0]    ;Load value of MaxCount
+while   CMP   R0,R6         ;Compare value of R0 with MaxCount, Signed comparision
+        BGE   end           ;If value is greater than MaxCount, stop the loop
+        ADDS  R0,R0,#1      ;otherwise, add 1 to the value of R0
+        B     while         ;loop back  
+		
+end     NOP                 ;No operation
+
+;_Question 3:______
+;
+;     Psuedo Code:
+;      Time = 100 
+;      repeat{
+;          Time = Time + 1 
+;      } until (Time == 250)
+
+		LDR       R0,=Time     ;Load address of Time
+		LDR       R1,[R0,#0]   ;Load value of Time
+		MOVS      R1,#100      ;Set value of Time to 100
+		STR       R1,[R0,#0]   ;Store back value of time
+	     
+        LDR	      R2,=250      ;Store 250 in a register for comparisions  
+		
+repeat	ADDS      R1,R1,#1     ;Increment time by 1
+        STR       R1,[R0,#0]   ;Save incremented value to the variable.
+        CMP       R1,R2        ;Compare value of Time and 250
+		BNE       repeat       ;loop back if not equal.
+
+
+;_Question 4:______
+;
+;     Psuedo Code: 
+;      for(R1 = 10; R1 < N; R1++){
+;          R0 = R0 << 1     //Shift left one bit
+;      }
+ 
+		MOVS	  R1,#10        ;Initialize loop counter
+		LDR       R2,=N         ;Load address of N 
+		LDR		  R3,[R2,#0]	;Load value of N
+		
+loop    CMP       R1,R3    		;Compare values of R1 and N
+        BHS       end           ;Unsigned variable comparision, 
+								;if R1 is lower than
+		LSLS      R0,R0,#1      ;Left Shift one bit
+        ADDS      R1,R1,#1      ;Increment counter
+        B         loop		    ;Loop back
+
+end		NOP                     ;No operation
+		
+		
+		
