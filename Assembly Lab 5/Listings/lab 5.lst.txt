@@ -1,0 +1,575 @@
+
+
+
+ARM Macro Assembler    Page 1 Program Title for Listing Header Goes Here
+
+
+    1 00000000                 TTL              Program Title for Listing Header Goes Here
+    2 00000000         ;****************************************************************
+    3 00000000         ;Descriptive comment header goes here.
+    4 00000000         ;(What does the program do?)
+    5 00000000         ;Name:  Shubhang Mehrotra
+    6 00000000         ;Date:  <Date completed here>
+    7 00000000         ;Class:  CMPE-250
+    8 00000000         ;Section:  01 Thursday 2 PM 
+    9 00000000         ;---------------------------------------------------------------
+   10 00000000         ;Keil Template for KL05
+   11 00000000         ;R. W. Melton
+   12 00000000         ;September 13, 2020
+   13 00000000         ;****************************************************************
+   14 00000000         ;Assembler directives
+   15 00000000                 THUMB
+   17 00000000         ;****************************************************************
+   18 00000000         ;Include files
+   19 00000000                 GET              MKL05Z4.s   ;Included by start.s
+   21 00000000         ;****************************************************************
+   22 00000000         ;EQUates
+   23 00000000         ;Characters
+   24 00000000 0000000D 
+                       CR      EQU              0x0D
+   25 00000000 0000000A 
+                       LF      EQU              0x0A
+   26 00000000 00000000 
+                       NULL    EQU              0x00
+   27 00000000         ;---------------------------------------------------------------
+   28 00000000         ;PORTx_PCRn (Port x pin control register n [for pin n])
+   29 00000000         ;___->10-08:Pin mux control (select 0 to 8)
+   30 00000000         ;Use provided PORT_PCR_MUX_SELECT_2_MASK
+   31 00000000         ;---------------------------------------------------------------
+   32 00000000         ;Port B
+   34 00000000 01000200 
+                       PORT_PCR_SET_PTB2_UART0_RX
+                               EQU              (PORT_PCR_ISF_MASK :OR:                                    PORT_PCR_MUX
+_SELECT_2_MASK)
+   36 00000000 01000200 
+                       PORT_PCR_SET_PTB1_UART0_TX
+                               EQU              (PORT_PCR_ISF_MASK :OR:                                    PORT_PCR_MUX
+_SELECT_2_MASK)
+   37 00000000         ;---------------------------------------------------------------
+
+
+
+ARM Macro Assembler    Page 2 Program Title for Listing Header Goes Here
+
+
+   38 00000000         ;SIM_SCGC4
+   39 00000000         ;1->10:UART0 clock gate control (enabled)
+   40 00000000         ;Use provided SIM_SCGC4_UART0_MASK
+   41 00000000         ;---------------------------------------------------------------
+   42 00000000         ;SIM_SCGC5
+   43 00000000         ;1->10:Port B clock gate control (enabled)
+   44 00000000         ;Use provided SIM_SCGC5_PORTB_MASK
+   45 00000000         ;---------------------------------------------------------------
+   46 00000000         ;SIM_SOPT2
+   47 00000000         ;01=27-26:UART0SRC=UART0 clock source select (MCGFLLCLK)
+   48 00000000         ;---------------------------------------------------------------
+   50 00000000 04000000 
+                       SIM_SOPT2_UART0SRC_MCGFLLCLK
+                               EQU              (1 << SIM_SOPT2_UART0SRC_SHIFT)
+   51 00000000         ;---------------------------------------------------------------
+   52 00000000         ;SIM_SOPT5
+   53 00000000         ; 0->   16:UART0 open drain enable (disabled)
+   54 00000000         ; 0->   02:UART0 receive data select (UART0_RX)
+   55 00000000         ;00->01-00:UART0 transmit data select source (UART0_TX)
+   59 00000000 00010005 
+                       SIM_SOPT5_UART0_EXTERN_MASK_CLEAR
+                               EQU              (SIM_SOPT5_UART0ODE_MASK :OR:                                  SIM_SOPT
+5_UART0RXSRC_MASK :OR:                                  SIM_SOPT5_UART0TXSRC_MASK)
+   60 00000000         ;---------------------------------------------------------------
+   61 00000000         ;UART0_BDH
+   62 00000000         ;    0->  7:LIN break detect IE (disabled)
+   63 00000000         ;    0->  6:RxD input active edge IE (disabled)
+   64 00000000         ;    0->  5:Stop bit number select (1)
+   65 00000000         ;00001->4-0:SBR[12:0] (UART0CLK / [9600 * (OSR + 1)]) 
+   66 00000000         ;UART0CLK is MCGFLLCLK
+   67 00000000         ;MCGPLLCLK is 47972352 Hz ~=~ 48 MHz
+   68 00000000         ;SBR ~=~ 48 MHz / (9600 * 16) = 312.5 --> 312 = 0x138
+   69 00000000         ;SBR = 47972352 / (9600 * 16) = 312.32 --> 312 = 0x138
+   70 00000000 00000001 
+                       UART0_BDH_9600
+                               EQU              0x01
+   71 00000000         ;---------------------------------------------------------------
+   72 00000000         ;UART0_BDL
+   73 00000000         ;26->7-0:SBR[7:0] (UART0CLK / [9600 * (OSR + 1)])
+   74 00000000         ;UART0CLK is MCGFLLCLK
+   75 00000000         ;MCGPLLCLK is 47972352 Hz ~=~ 48 MHz
+   76 00000000         ;SBR ~=~ 48 MHz / (9600 * 16) = 312.5 --> 312 = 0x138
+
+
+
+ARM Macro Assembler    Page 3 Program Title for Listing Header Goes Here
+
+
+   77 00000000         ;SBR = 47972352 / (9600 * 16) = 312.32 --> 312 = 0x138
+   78 00000000 00000038 
+                       UART0_BDL_9600
+                               EQU              0x38
+   79 00000000         ;---------------------------------------------------------------
+   80 00000000         ;UART0_C1
+   81 00000000         ;0-->7:LOOPS=loops select (normal)
+   82 00000000         ;0-->6:DOZEEN=doze enable (disabled)
+   83 00000000         ;0-->5:RSRC=receiver source select (internal--no effect LOOPS=0)
+   84 00000000         ;0-->4:M=9- or 8-bit mode select 
+   85 00000000         ;        (1 start, 8 data [lsb first], 1 stop)
+   86 00000000         ;0-->3:WAKE=receiver wakeup method select (idle)
+   87 00000000         ;0-->2:IDLE=idle line type select (idle begins after start bit)
+   88 00000000         ;0-->1:PE=parity enable (disabled)
+   89 00000000         ;0-->0:PT=parity type (even parity--no effect PE=0)
+   90 00000000 00000000 
+                       UART0_C1_8N1
+                               EQU              0x00
+   91 00000000         ;---------------------------------------------------------------
+   92 00000000         ;UART0_C2
+   93 00000000         ;0-->7:TIE=transmit IE for TDRE (disabled)
+   94 00000000         ;0-->6:TCIE=transmission complete IE for TC (disabled)
+   95 00000000         ;0-->5:RIE=receiver IE for RDRF (disabled)
+   96 00000000         ;0-->4:ILIE=idle line IE for IDLE (disabled)
+   97 00000000         ;1-->3:TE=transmitter enable (enabled)
+   98 00000000         ;1-->2:RE=receiver enable (enabled)
+   99 00000000         ;0-->1:RWU=receiver wakeup control (normal)
+  100 00000000         ;0-->0:SBK=send break (disabled, normal)
+  101 00000000 0000000C 
+                       UART0_C2_T_R
+                               EQU              (UART0_C2_TE_MASK :OR: UART0_C2_RE_MASK)
+  102 00000000         ;---------------------------------------------------------------
+  103 00000000         ;UART0_C3
+  104 00000000         ;0-->7:R8T9=9th data bit for receiver (not used M=0)
+  105 00000000         ;           10th data bit for transmitter (not used M10=0)
+  106 00000000         ;0-->6:R9T8=9th data bit for transmitter (not used M=0)
+  107 00000000         ;           10th data bit for receiver (not used M10=0)
+  108 00000000         ;0-->5:TXDIR=UART_TX pin direction in single-wire mode
+  109 00000000         ;            (no effect LOOPS=0)
+  110 00000000         ;0-->4:TXINV=transmit data inversion (not inverted)
+  111 00000000         ;0-->3:ORIE=overrun IE for OR (disabled)
+  112 00000000         ;0-->2:NEIE=noise error IE for NF (disabled)
+
+
+
+ARM Macro Assembler    Page 4 Program Title for Listing Header Goes Here
+
+
+  113 00000000         ;0-->1:FEIE=framing error IE for FE (disabled)
+  114 00000000         ;0-->0:PEIE=parity error IE for PF (disabled)
+  115 00000000 00000000 
+                       UART0_C3_NO_TXINV
+                               EQU              0x00
+  116 00000000         ;---------------------------------------------------------------
+  117 00000000         ;UART0_C4
+  118 00000000         ;    0-->  7:MAEN1=match address mode enable 1 (disabled)
+  119 00000000         ;    0-->  6:MAEN2=match address mode enable 2 (disabled)
+  120 00000000         ;    0-->  5:M10=10-bit mode select (not selected)
+  121 00000000         ;01111-->4-0:OSR=over sampling ratio (16)
+  122 00000000         ;               = 1 + OSR for 3 <= OSR <= 31
+  123 00000000         ;               = 16 for 0 <= OSR <= 2 (invalid values)
+  124 00000000 0000000F 
+                       UART0_C4_OSR_16
+                               EQU              0x0F
+  125 00000000 0000000F 
+                       UART0_C4_NO_MATCH_OSR_16
+                               EQU              UART0_C4_OSR_16
+  126 00000000         ;---------------------------------------------------------------
+  127 00000000         ;UART0_C5
+  128 00000000         ;  0-->  7:TDMAE=transmitter DMA enable (disabled)
+  129 00000000         ;  0-->  6:Reserved; read-only; always 0
+  130 00000000         ;  0-->  5:RDMAE=receiver full DMA enable (disabled)
+  131 00000000         ;000-->4-2:Reserved; read-only; always 0
+  132 00000000         ;  0-->  1:BOTHEDGE=both edge sampling (rising edge only)
+  133 00000000         ;  0-->  0:RESYNCDIS=resynchronization disable (enabled)
+  134 00000000 00000000 
+                       UART0_C5_NO_DMA_SSR_SYNC
+                               EQU              0x00
+  135 00000000         ;---------------------------------------------------------------
+  136 00000000         ;UART0_S1
+  137 00000000         ;0-->7:TDRE=transmit data register empty flag; read-only
+  138 00000000         ;0-->6:TC=transmission complete flag; read-only
+  139 00000000         ;0-->5:RDRF=receive data register full flag; read-only
+  140 00000000         ;1-->4:IDLE=idle line flag; write 1 to clear (clear)
+  141 00000000         ;1-->3:OR=receiver overrun flag; write 1 to clear (clear)
+  142 00000000         ;1-->2:NF=noise flag; write 1 to clear (clear)
+  143 00000000         ;1-->1:FE=framing error flag; write 1 to clear (clear)
+  144 00000000         ;1-->0:PF=parity error flag; write 1 to clear (clear)
+  149 00000000 0000001F 
+                       UART0_S1_CLEAR_FLAGS
+
+
+
+ARM Macro Assembler    Page 5 Program Title for Listing Header Goes Here
+
+
+                               EQU              (UART0_S1_IDLE_MASK :OR:                              UART0_S1_OR_MASK 
+:OR:                              UART0_S1_NF_MASK :OR:                              UART0_S1_FE_MASK :OR:           
+                   UART0_S1_PF_MASK)
+  150 00000000         ;---------------------------------------------------------------
+  151 00000000         ;UART0_S2
+  152 00000000         ;1-->7:LBKDIF=LIN break detect interrupt flag (clear)
+  153 00000000         ;             write 1 to clear
+  154 00000000         ;1-->6:RXEDGIF=RxD pin active edge interrupt flag (clear)
+  155 00000000         ;              write 1 to clear
+  156 00000000         ;0-->5:(reserved); read-only; always 0
+  157 00000000         ;0-->4:RXINV=receive data inversion (disabled)
+  158 00000000         ;0-->3:RWUID=receive wake-up idle detect
+  159 00000000         ;0-->2:BRK13=break character generation length (10)
+  160 00000000         ;0-->1:LBKDE=LIN break detect enable (disabled)
+  161 00000000         ;0-->0:RAF=receiver active flag; read-only
+  163 00000000 000000C0 
+                       UART0_S2_NO_RXINV_BRK10_NO_LBKDETECT_CLEAR_FLAGS
+                               EQU              (UART0_S2_LBKDIF_MASK :OR: UART0_S2_RXEDGIF_MASK)
+  164 00000000         ;---------------------------------------------------------------
+  165 00000000         ;Program
+  166 00000000         ;Linker requires Reset_Handler
+  167 00000000                 AREA             MyCode,CODE,READONLY
+  168 00000000                 ENTRY
+  169 00000000                 EXPORT           Reset_Handler
+  170 00000000                 IMPORT           Startup
+  171 00000000         
+  172 00000000                 EXPORT           PutChar
+  173 00000000                 IMPORT           Carry
+  174 00000000                 IMPORT           Negative
+  175 00000000                 IMPORT           Overflow
+  176 00000000                 IMPORT           PutPrompt
+  177 00000000                 IMPORT           Zero
+  178 00000000         
+  179 00000000         Reset_Handler
+                               PROC             {}
+  180 00000000         main
+  181 00000000         ;---------------------------------------------------------------
+  182 00000000         ;Mask interrupts
+  183 00000000 B672            CPSID            I
+  184 00000002         ;KL05 system startup with 48-MHz system clock
+  185 00000002 F7FF FFFE       BL               Startup
+  186 00000006         ;---------------------------------------------------------------
+
+
+
+ARM Macro Assembler    Page 6 Program Title for Listing Header Goes Here
+
+
+  187 00000006         ;>>>>> begin main program code <<<<<
+  188 00000006 F7FF FFFE       BL               Init_UART0_Polling
+  189 0000000A         prompt
+  190 0000000A F7FF FFFE       BL               PutPrompt
+  191 0000000E         loop
+  192 0000000E F7FF FFFE       BL               GetChar
+  193 00000012 F7FF FFFE       BL               PutChar
+  194 00000016 280D            CMP              R0,#CR
+  195 00000018 D00E            BEQ              Ins_LF
+  196 0000001A         
+  197 0000001A         ;capitalizing the letters
+  198 0000001A 2861            CMP              R0,#'a'
+  199 0000001C D303            BLO              char_subRoutine
+  200 0000001E         
+  201 0000001E 287A            CMP              R0,#'z'
+  202 00000020 D801            BHI              char_subRoutine
+  203 00000022 3861            SUBS             R0,R0,#'a'  ;removing the ascii of small letter
+  204 00000024 3041            ADDS             R0,R0,#'A'  ;putting the ascii of the capital letter 
+  205 00000026         ;**************************
+  206 00000026         
+  207 00000026         char_subRoutine
+  208 00000026         ;perform character subroutine
+  209 00000026 2843            CMP              R0,#'C'
+  210 00000028 D00A            BEQ              C_subRoutine
+  211 0000002A         
+  212 0000002A 284E            CMP              R0,#'N'
+  213 0000002C D00B            BEQ              N_subRoutine
+  214 0000002E         
+  215 0000002E 2856            CMP              R0,#'V'
+  216 00000030 D00C            BEQ              V_subRoutine
+  217 00000032         
+  218 00000032 285A            CMP              R0,#'Z'
+  219 00000034 D00D            BEQ              Z_subRoutine
+  220 00000036         ;****************************
+  221 00000036 E7EA            B                loop
+  222 00000038         
+  223 00000038 200A    Ins_LF  MOVS             R0,#LF
+  224 0000003A F7FF FFFE       BL               PutChar
+  225 0000003E E7E4            B                prompt
+  226 00000040         
+  227 00000040         C_subRoutine
+  228 00000040 F7FF FFFE       BL               Carry
+
+
+
+ARM Macro Assembler    Page 7 Program Title for Listing Header Goes Here
+
+
+  229 00000044 E7E1            B                prompt
+  230 00000046         
+  231 00000046         N_subRoutine
+  232 00000046 F7FF FFFE       BL               Negative
+  233 0000004A E7DE            B                prompt
+  234 0000004C         
+  235 0000004C         V_subRoutine
+  236 0000004C F7FF FFFE       BL               Overflow
+  237 00000050 E7DB            B                prompt
+  238 00000052         
+  239 00000052         Z_subRoutine
+  240 00000052 F7FF FFFE       BL               Zero
+  241 00000056 E7D8            B                prompt
+  242 00000058         
+  243 00000058         ;>>>>>   end main program code <<<<<
+  244 00000058         ;Stay here
+  245 00000058 E7FE            B                .
+  246 0000005A                 ENDP
+  247 0000005A         ;>>>>> begin subroutine code <<<<<
+  248 0000005A         Init_UART0_Polling
+                               PROC             {R0-R14}
+  249 0000005A         ; Select/Configure UART0 Sources
+  250 0000005A         ; Enable clocks for UART0 and Port B
+  251 0000005A         ; Select port B mux pins to connect to UART0 
+  252 0000005A         ; Configure UART0(register initialization)
+  253 0000005A         
+  254 0000005A         
+  255 0000005A B407            PUSH             {R0, R1, R2} ;Register retention
+  256 0000005C         
+  257 0000005C 4823            LDR              R0,=SIM_SOPT2 ;connect Sources
+  258 0000005E 4924            LDR              R1,=SIM_SOPT2_UART0SRC_MASK
+  259 00000060 6802            LDR              R2,[R0,#0]  ;current SIM_SOPT2 value
+  260 00000062 438A            BICS             R2,R2,R1    ;bits cleared of UART0SRC
+  261 00000064 4923            LDR              R1,=SIM_SOPT2_UART0SRC_MCGFLLCLK
+  262 00000066 430A            ORRS             R2,R2,R1    ;UART0 bits changed
+  263 00000068 6002            STR              R2,[R0,#0]  ;update SIM_SOPT2
+  264 0000006A         
+  265 0000006A 4823            LDR              R0,=SIM_SOPT5 ;set SIM_SOPT5 for UART0 external
+  266 0000006C 4923            LDR              R1,= SIM_SOPT5_UART0_EXTERN_MASK_CLEAR
+  267 0000006E 6802            LDR              R2,[R0,#0]
+  268 00000070 438A            BICS             R2,R2,R1
+  269 00000072 6002            STR              R2,[R0,#0]
+
+
+
+ARM Macro Assembler    Page 8 Program Title for Listing Header Goes Here
+
+
+  270 00000074         
+  271 00000074 4822            LDR              R0,=SIM_SCGC4 ;enable SIM_SCGC4 as clock for UART0 Module
+  272 00000076 4923            LDR              R1,=SIM_SCGC4_UART0_MASK
+  273 00000078 6802            LDR              R2,[R0,#0]
+  274 0000007A 430A            ORRS             R2,R2,R1
+  275 0000007C 6002            STR              R2,[R0,#0]
+  276 0000007E         
+  277 0000007E 4822            LDR              R0,=SIM_SCGC5 ;enable clock for Port B module
+  278 00000080 4920            LDR              R1,= SIM_SCGC5_PORTB_MASK
+  279 00000082 6802            LDR              R2,[R0,#0]
+  280 00000084 430A            ORRS             R2,R2,R1
+  281 00000086 6002            STR              R2,[R0,#0]
+  282 00000088         
+  283 00000088 4820            LDR              R0,=PORTB_PCR2 ;connect Port B pin 1 to UART0 Rx
+  284 0000008A 4921            LDR              R1,=PORT_PCR_SET_PTB2_UART0_RX
+  285 0000008C 6001            STR              R1,[R0,#0]
+  286 0000008E         
+  287 0000008E 4821            LDR              R0,=PORTB_PCR1 ;connect Port B pin 2 to UART0 Tx
+  288 00000090 491F            LDR              R1,=PORT_PCR_SET_PTB1_UART0_TX
+  289 00000092 6001            STR              R1,[R0,#0]
+  290 00000094         
+  291 00000094         
+  292 00000094 4820            LDR              R0,=UART0_BASE ;load base address
+  293 00000096         
+  294 00000096 210C            MOVS             R1,#UART0_C2_T_R ;Diasble UART0
+  295 00000098 78C2            LDRB             R2,[R0,#UART0_C2_OFFSET]
+  296 0000009A 438A            BICS             R2,R2,R1
+  297 0000009C 70C2            STRB             R2,[R0,#UART0_C2_OFFSET]
+  298 0000009E         
+  299 0000009E 2101            MOVS             R1,#UART0_BDH_9600 ;set UART0 baud rate
+  300 000000A0 7001            STRB             R1,[R0,#UART0_BDH_OFFSET]
+  301 000000A2 2138            MOVS             R1,#UART0_BDL_9600
+  302 000000A4 7041            STRB             R1,[R0,#UART0_BDL_OFFSET]
+  303 000000A6         
+  304 000000A6 2100            MOVS             R1,#UART0_C1_8N1 ;set UART0 8 bit serial stream 
+  305 000000A8 7081            STRB             R1,[R0,#UART0_C1_OFFSET]
+  306 000000AA 2100            MOVS             R1,#UART0_C3_NO_TXINV
+  307 000000AC 7181            STRB             R1,[R0,#UART0_C3_OFFSET]
+  308 000000AE 210F            MOVS             R1,#UART0_C4_NO_MATCH_OSR_16
+  309 000000B0 7281            STRB             R1,[R0,#UART0_C4_OFFSET]
+  310 000000B2 2100            MOVS             R1,#UART0_C5_NO_DMA_SSR_SYNC
+  311 000000B4 72C1            STRB             R1,[R0,#UART0_C5_OFFSET]
+
+
+
+ARM Macro Assembler    Page 9 Program Title for Listing Header Goes Here
+
+
+  312 000000B6 211F            MOVS             R1,#UART0_S1_CLEAR_FLAGS
+  313 000000B8 7101            STRB             R1,[R0,#UART0_S1_OFFSET]
+  314 000000BA 21C0            MOVS             R1,#UART0_S2_NO_RXINV_BRK10_NO_LBKDETECT_CLEAR_FLAGS
+  315 000000BC 7141            STRB             R1,[R0,#UART0_S2_OFFSET]
+  316 000000BE         
+  317 000000BE 210C            MOVS             R1,#UART0_C2_T_R ;Enable UART0
+  318 000000C0 70C1            STRB             R1,[R0,#UART0_C2_OFFSET]
+  319 000000C2         
+  320 000000C2 BC07            POP              {R0,R1,R2}  ;Register retention 
+  321 000000C4         
+  322 000000C4 4770            BX               LR          ;exit subroutine
+  323 000000C6                 ENDP
+  324 000000C6         
+  325 000000C6         GetChar PROC             {R1-R14}
+  326 000000C6         ;/* Output:  R0:  Character received */
+  327 000000C6         ; repeat 
+  328 000000C6         ;      {check RDRF bit of UART0_S1
+  329 000000C6         ;   }until (RDRF= 1)
+  330 000000C6         ; get character received from UART0_D
+  331 000000C6         ; return }
+  332 000000C6 B40E            PUSH             {R1, R2, R3} ;Register retention
+  333 000000C8         
+  334 000000C8 4913            LDR              R1, =UART0_BASE
+  335 000000CA 2220            MOVS             R2, #UART0_S1_RDRF_MASK
+  336 000000CC         
+  337 000000CC 790B    repeat_get
+                               LDRB             R3, [R1, #UART0_S1_OFFSET]
+  338 000000CE 4013            ANDS             R3, R3, R2
+  339 000000D0 D0FC            BEQ              repeat_get
+  340 000000D2         
+  341 000000D2 79C8            LDRB             R0, [R1, #UART0_D_OFFSET] ;load value into R1 
+  342 000000D4         
+  343 000000D4 BC0E            POP              {R1, R2, R3} ;register retention
+  344 000000D6         
+  345 000000D6 4770            BX               LR          ;exit subroutine
+  346 000000D8                 ENDP
+  347 000000D8         
+  348 000000D8         PutChar PROC             {R0-R14}
+  349 000000D8         ;/*Input: R0: Character to transmit */
+  350 000000D8         ; repeat{
+  351 000000D8         ;    check TDRE bit of UART0_S1
+  352 000000D8         ; } until(TDRE == 1)
+
+
+
+ARM Macro Assembler    Page 10 Program Title for Listing Header Goes Here
+
+
+  353 000000D8         ; put character to transmit into UART0_D
+  354 000000D8         ; return }
+  355 000000D8         
+  356 000000D8 B40E            PUSH             {R1, R2, R3} ;register retention 
+  357 000000DA         
+  358 000000DA 490F            LDR              R1, =UART0_BASE ;get value of TDRE
+  359 000000DC 2280            MOVS             R2, #UART0_S1_TDRE_MASK
+  360 000000DE         
+  361 000000DE         repeat_put
+  362 000000DE 790B            LDRB             R3, [R1, #UART0_S1_OFFSET]
+  363 000000E0 4013            ANDS             R3, R3, R2  ;check to see if ready for loading 
+  364 000000E2 D0FC            BEQ              repeat_put  ;repeat unitl ready 
+  365 000000E4         
+  366 000000E4         
+  367 000000E4 71C8            STRB             R0, [R1, #UART0_D_OFFSET] ;transmit characters from R0
+  368 000000E6         
+  369 000000E6         
+  370 000000E6 BC0E            POP              {R1, R2, R3} ;register retention
+  371 000000E8         
+  372 000000E8 4770            BX               LR          ;exit subroutine
+  373 000000EA         
+  374 000000EA                 ENDP
+  375 000000EA         ;>>>>>   end subroutine code <<<<<
+  376 000000EA 00 00           ALIGN
+  377 000000EC         ;****************************************************************
+  378 000000EC         ;Vector Table Mapped to Address 0 at Reset
+  379 000000EC         ;Linker requires __Vectors to be exported
+  380 000000EC 40048004 
+              0C000000 
+              04000000 
+              40048010 
+              00010005 
+              40048034 
+              00000400 
+              40048038 
+              4004A008 
+              01000200 
+              4004A004 
+              4006A000         AREA             RESET, DATA, READONLY
+  381 00000000                 EXPORT           __Vectors
+  382 00000000                 EXPORT           __Vectors_End
+  383 00000000                 EXPORT           __Vectors_Size
+
+
+
+ARM Macro Assembler    Page 11 Program Title for Listing Header Goes Here
+
+
+  384 00000000                 IMPORT           __initial_sp
+  385 00000000                 IMPORT           Dummy_Handler
+  386 00000000                 IMPORT           HardFault_Handler
+  387 00000000         __Vectors
+  388 00000000         ;ARM core vectors
+  389 00000000 00000000        DCD              __initial_sp ;00:end of stack
+  390 00000004 00000000        DCD              Reset_Handler ;01:reset vector
+  391 00000008 00000000        DCD              Dummy_Handler ;02:NMI
+  392 0000000C 00000000        DCD              HardFault_Handler ;03:hard fault
+  393 00000010 00000000        DCD              Dummy_Handler ;04:(reserved)
+  394 00000014 00000000        DCD              Dummy_Handler ;05:(reserved)
+  395 00000018 00000000        DCD              Dummy_Handler ;06:(reserved)
+  396 0000001C 00000000        DCD              Dummy_Handler ;07:(reserved)
+  397 00000020 00000000        DCD              Dummy_Handler ;08:(reserved)
+  398 00000024 00000000        DCD              Dummy_Handler ;09:(reserved)
+  399 00000028 00000000        DCD              Dummy_Handler ;10:(reserved)
+  400 0000002C 00000000        DCD              Dummy_Handler ;11:SVCall (supervisor call)
+  401 00000030 00000000        DCD              Dummy_Handler ;12:(reserved)
+  402 00000034 00000000        DCD              Dummy_Handler ;13:(reserved)
+  403 00000038 00000000        DCD              Dummy_Handler ;14:PendSV (PendableSrvReq)
+  404 0000003C         ;   pendable request 
+  405 0000003C         ;   for system service)
+  406 0000003C 00000000        DCD              Dummy_Handler ;15:SysTick (system tick timer)
+  407 00000040 00000000        DCD              Dummy_Handler ;16:DMA channel 0 transfer 
+  408 00000044         ;   complete/error
+  409 00000044 00000000        DCD              Dummy_Handler ;17:DMA channel 1 transfer
+  410 00000048         ;   complete/error
+  411 00000048 00000000        DCD              Dummy_Handler ;18:DMA channel 2 transfer
+  412 0000004C         ;   complete/error
+  413 0000004C 00000000        DCD              Dummy_Handler ;19:DMA channel 3 transfer
+  414 00000050         ;   complete/error
+  415 00000050 00000000        DCD              Dummy_Handler ;20:(reserved)
+  416 00000054 00000000        DCD              Dummy_Handler ;21:FTFA command complete/
+  417 00000058         ;   read collision
+  418 00000058 00000000        DCD              Dummy_Handler ;22:low-voltage detect;
+  419 0000005C         ;   low-voltage warning
+  420 0000005C 00000000        DCD              Dummy_Handler ;23:low leakage wakeup
+  421 00000060 00000000        DCD              Dummy_Handler ;24:I2C0
+  422 00000064 00000000        DCD              Dummy_Handler ;25:(reserved)
+  423 00000068 00000000        DCD              Dummy_Handler ;26:SPI0
+  424 0000006C 00000000        DCD              Dummy_Handler ;27:(reserved)
+  425 00000070 00000000        DCD              Dummy_Handler ;28:UART0 (status; error)
+
+
+
+ARM Macro Assembler    Page 12 Program Title for Listing Header Goes Here
+
+
+  426 00000074 00000000        DCD              Dummy_Handler ;29:(reserved)
+  427 00000078 00000000        DCD              Dummy_Handler ;30:(reserved)
+  428 0000007C 00000000        DCD              Dummy_Handler ;31:ADC0
+  429 00000080 00000000        DCD              Dummy_Handler ;32:CMP0
+  430 00000084 00000000        DCD              Dummy_Handler ;33:TPM0
+  431 00000088 00000000        DCD              Dummy_Handler ;34:TPM1
+  432 0000008C 00000000        DCD              Dummy_Handler ;35:(reserved)
+  433 00000090 00000000        DCD              Dummy_Handler ;36:RTC (alarm)
+  434 00000094 00000000        DCD              Dummy_Handler ;37:RTC (seconds)
+  435 00000098 00000000        DCD              Dummy_Handler ;38:PIT
+  436 0000009C 00000000        DCD              Dummy_Handler ;39:(reserved)
+  437 000000A0 00000000        DCD              Dummy_Handler ;40:(reserved)
+  438 000000A4 00000000        DCD              Dummy_Handler ;41:DAC0
+  439 000000A8 00000000        DCD              Dummy_Handler ;42:TSI0
+  440 000000AC 00000000        DCD              Dummy_Handler ;43:MCG
+  441 000000B0 00000000        DCD              Dummy_Handler ;44:LPTMR0
+  442 000000B4 00000000        DCD              Dummy_Handler ;45:(reserved)
+  443 000000B8 00000000        DCD              Dummy_Handler ;46:PORTA
+  444 000000BC 00000000        DCD              Dummy_Handler ;47:PORTB
+  445 000000C0         __Vectors_End
+  446 000000C0 000000C0 
+                       __Vectors_Size
+                               EQU              __Vectors_End - __Vectors
+  447 000000C0                 ALIGN
+  448 000000C0         ;****************************************************************
+  449 000000C0         ;Constants
+  450 000000C0                 AREA             MyConst,DATA,READONLY
+  451 00000000         ;>>>>> begin constants here <<<<<
+  452 00000000         ;>>>>>   end constants here <<<<<
+  453 00000000                 ALIGN
+  454 00000000         ;****************************************************************
+  455 00000000         ;Variables
+  456 00000000                 AREA             MyData,DATA,READWRITE
+  457 00000000         ;>>>>> begin variables here <<<<<
+  458 00000000         ;>>>>>   end variables here <<<<<
+  459 00000000                 ALIGN
+  460 00000000                 END
+Command Line: --debug --length=49 --width=120 --diag_suppress=9931 --cpu=Cortex-M0+ --apcs=interwork --depend=".\objects
+\lab 5.d" -o".\objects\lab 5.o" -IC:\Users\shubh\AppData\Local\Arm\Packs\Keil\Kinetis_KLxx_DFP\1.14.0\Device\Include -IC
+:\Keil_v5\ARM\CMSIS\Include --predefine="__EVAL SETA 1" --predefine="__UVISION_VERSION SETA 533" --predefine="MKL05Z32xx
+x4 SETA 1" --list=.\listings\lab 5.lst "lab 5.s"
