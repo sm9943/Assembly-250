@@ -1,0 +1,33 @@
+LengthStringSB    PROC{R1-R14}  
+;helper function for PutStringSB to determine length of string	
+;R0 = memory location of string 
+;R1 = Buffer capacity 
+;R2 = Output num of String length
+
+		PUSH {R1, R3, R4, LR}                  ;register retention for nested subroutine
+		MOVS R1, #MAX_STRING
+		MOVS R2, #0                            ;initalize length to zero.
+		MOVS R4, #0                            ;initalize string offset to zero
+		
+ADD_LEN
+
+		CMP R2, R1                             ;if legth is >= buffer, return
+        BGE END_LengthStringSB 
+		
+        LDRB R3, [R0, R4]                      ;get next char input and store in R3
+		
+		CMP R3, #0                             ;check for null terminator
+		BEQ END_LengthStringSB 
+		
+		ADDS R4, R4, #1                        ;Add to string offset
+		
+		ADDS R2, R2, #1                        ;Add 1 to max
+		
+        B ADD_LEN
+		
+END_LengthStringSB 
+
+		POP {R1, R3, R4, PC}                   ;nested subroutine
+		;BX LR                                 ;exit subroutine
+		ENDP
+;************************************************************************
