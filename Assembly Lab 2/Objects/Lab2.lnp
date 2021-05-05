@@ -1,0 +1,6 @@
+--cpu Cortex-M0+
+".\objects\lab2.o"
+--strict --scatter ".\Objects\Lab2.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list ".\Listings\Lab2.map" -o .\Objects\Lab2.axf
